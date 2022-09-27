@@ -6,7 +6,7 @@ A command-line interactive transcription tool using whisper.
 ## Prerequisites:
 
 Tool imo has dependencies that cannot be installed by pip alone.
-Please install them one by one.
+Install each dependency according to its installation instructions.
 
 (1) Whisper
 
@@ -25,6 +25,18 @@ pip install docopt
 
 ## Run
 
+Run imo.py.
+
 ```sh
 imo.py
 ```
+
+When you see "press Ctrl+C to quit", you are ready to go.
+
+Try speaking something into the microphone. When you finish speaking, the text will be displayed. After that, every time you speak, the content of your speech will be transcribed and displayed.
+
+To quit, press Ctrl+C.
+
+A Screenshot.
+
+![](images/run1.png)
