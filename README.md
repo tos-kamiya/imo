@@ -21,9 +21,11 @@ Follow the "Installation" instruction on the page https://pypi.org/project/PyAud
 (3) `numpy` and `docopt` (or `docopt-ng`).
 
 ```sh
-pip install numpy
-pip install docopt
+python3 -m pip install numpy
+python3 -m pip install docopt
 ```
+
+Copy the file `imo.py` to a directory on the path.
 
 ## Run
 
@@ -39,6 +41,11 @@ Try speaking something into the microphone. When you finish speaking, the text w
 
 To quit, press Ctrl+C.
 
-A Screenshot.
+The default behavior is to estimate the language from speech and transcribe it into text, and output it to the terminal.
+
+* You can specify the language with the option `--language`, e.g., `--language=English`, `--language=Japanese`.
+* You can specify a model for transcription with the option `--model`, e.g., `--model=medium`, `--model=large`.
+
+### A Screenshot.
 
 ![](images/run1.png)
