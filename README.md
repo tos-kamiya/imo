@@ -3,7 +3,9 @@ imo
 
 A command-line interactive transcription tool using whisper.
 
-## Prerequisites:
+(Checked on Ubuntu 20.04 + Cuda)
+
+## Prerequisites / Installation
 
 Tool imo has dependencies that cannot be installed by pip alone.
 Install each dependency according to its installation instructions.
