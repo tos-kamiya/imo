@@ -3,7 +3,7 @@ imo
 
 A command-line interactive transcription tool using whisper.
 
-(Checked on Ubuntu 20.04 + Cuda)
+(Checked on Ubuntu 22.04 + Cuda)
 
 ## Prerequisites / Installation
 
@@ -18,16 +18,15 @@ Follow the "Setup" instruction on the page https://github.com/openai/whisper
 
 Follow the "Installation" instruction on the page https://pypi.org/project/PyAudio/
 
-(3) `numpy` and `docopt` (or `docopt-ng`).
+(3) `numpy`
 
 ```sh
 python3 -m pip install numpy
-python3 -m pip install docopt
 ```
 
 Copy the file `imo.py` to a directory on the path.
 
-## Run
+## Usage
 
 Run imo.py.
 
@@ -35,16 +34,23 @@ Run imo.py.
 imo.py
 ```
 
-When you see "press Ctrl+C to quit", you are ready to go.
+or
 
-Try speaking something into the microphone. When you finish speaking, the text will be displayed. After that, every time you speak, the content of your speech will be transcribed and displayed.
+```sh
+python3 imo.py
+```
+
+When a message "press Ctrl+C to quit" is shown up, you are ready to go; try speaking something into the microphone. When you finish speaking, the text will be displayed. After that, every time you speak, the content of your speech will be transcribed and displayed.
 
 To quit, press Ctrl+C.
 
+### Options
+
 The default behavior is to estimate the language from speech and transcribe it into text, and output it to the terminal.
 
-* You can specify the language with the option `--language`, e.g., `--language=English`, `--language=Japanese`.
-* You can specify a model for transcription with the option `--model`, e.g., `--model=medium`, `--model=large`.
+* `--language` to specify the language, e.g., `--language=English`, `--language=Japanese`.
+* `--model` to specify the model to transcribe or translate e.g., `--model=medium`, `--model=large`. The default is `--model=large-v2`.
+* `--task` The default is to transcribe, but when you specify `--task=translate`, it will also perform translation.
 
 ### A Screenshot.
 

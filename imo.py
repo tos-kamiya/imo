@@ -16,7 +16,7 @@ import wave
 import whisper
 import pyaudio
 import numpy as np
-from docopt import docopt
+import argparse
 
 
 CHUNK = 1024
@@ -70,16 +70,16 @@ def detect_noise_level(p_stream, breath_frames):
     return silence_vol_threshold
 
 
-def whisper_convert_to_text(audio, model, language):
+def whisper_convert_to_text(audio, model, language, task):
     mel = whisper.log_mel_spectrogram(audio).to(model.device)
     if language is None:
         _, probs = model.detect_language(mel)
-        print("[%s] " % max(probs, key=probs.get), end='')
-        options = whisper.DecodingOptions()
-    else:
-        options = whisper.DecodingOptions(language=language)
-    result = whisper.decode(model, mel, options)
-    return result.text
+        ml = max(probs, key=probs.get)
+        print("[%s] " % ml, end='')
+        language = ml
+    options = {'language': language, 'task': task}
+    result = whisper.transcribe(model, audio, **options)
+    return result['text']
 
 
 def audio_data_generator(noise_level, breath_frames, temp_wav_file, ready_flag_file):
@@ -123,27 +123,31 @@ def audio_data_generator(noise_level, breath_frames, temp_wav_file, ready_flag_f
         close_pyaudio_stream(p_stream)
 
 
-__doc__ = '''Interactive Moji-Okoshi (voice transcription)
-
-Usage:
-  imo.py [options]
-
-Options:
-  --model=MODEL         Model. Either tiny, base, small, medium, or large [default: medium]
-  --language=LANG       Language of the voice. Automatic detection if not specified.
-  --noise-level=NUM     Minimum volume of speech. Specify if you have trouble detecting speech breaks (0.0 to 0.2).
-  --breath-time=SEC     Silent intervals perceived as sentence breaks [default: 1.5]
-  --diag                Show subprocess's stderr/stdout (for debug)
-'''
-
-
 def main():
-    args = docopt(__doc__)
+    parser = argparse.ArgumentParser(description='Interactive Moji-Okoshi (voice transcription)')
 
-    breath_time = float(args["--breath-time"])
-    breath_frames = int(RATE / CHUNK * breath_time)
+    parser.add_argument(
+        '--model', type=str, default='medium',
+        help='Model. Either tiny, base, small, medium, large, or large-v2 [default: large-v2]')
+    parser.add_argument(
+        '--language', type=str, default=None,
+        help='Language of speech. Automatically detected when not specified.')
+    parser.add_argument(
+        '--task', type=str, default=None,
+        help='Specify `translate` to translate speech into English.')
+    parser.add_argument(
+        '--noise-level', type=float, default=None,
+        help='Minimum volume of speech. Specify if you have trouble detecting speech breaks (0.0 to 0.2).')
+    parser.add_argument(
+        '--breath-time', type=float, default=1.5,
+        help='Silent intervals perceived as sentence breaks [default: 1.5]')
+    parser.add_argument(
+        '--diag', action='store_true', default=False,
+        help='Show subprocess\'s stderr/stdout (for debug)')
 
-    language = args["--language"]  # might be None
+    args = parser.parse_args()
+
+    breath_frames = int(RATE / CHUNK * args.breath_time)
 
     # prepare temporary directory
     tempdir = tempfile.TemporaryDirectory()
@@ -151,18 +155,18 @@ def main():
     ready_flag_file = os.path.join(tempdir.name, "ready_flag")
 
     # spawn audio-data-generator process
-    cmd = [sys.executable, script_path, AUDIO_DATA_GENERATOR_SUBPROCESS_MARK, args['--noise-level'] or "", "%d" % breath_frames, temp_wav_file, ready_flag_file]
-    if args['--diag']:
+    cmd = [sys.executable, script_path, AUDIO_DATA_GENERATOR_SUBPROCESS_MARK, args.noise_level or "", "%d" % breath_frames, temp_wav_file, ready_flag_file]
+    if args.diag:
         adg_p = subprocess.Popen(cmd)
     else:
         adg_p = subprocess.Popen(cmd, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
     print("* loading model ...", file=sys.stderr)
-    model = whisper.load_model(args["--model"])
+    model = whisper.load_model(args.model)
 
     try:
         # wait until agp process gets ready
-        if args['--noise-level'] is None:
+        if args.noise_level is None:
             print("* detecting noise level ...", file=sys.stderr)
         while not os.path.exists(ready_flag_file):
             time.sleep(0.1)
@@ -172,7 +176,7 @@ def main():
             # wait until audio data gets ready
             while not os.path.exists(temp_wav_file):
                 time.sleep(0.1)
-            if args['--diag']:
+            if args.diag:
                 print("* load audio data from a temporary file", file=sys.stderr)
 
             # read audio data and delete it
@@ -181,7 +185,7 @@ def main():
             audio = whisper.pad_or_trim(audio)
 
             # convert speech to text
-            text = whisper_convert_to_text(audio, model, language)
+            text = whisper_convert_to_text(audio, model, args.language, args.task)
 
             # print the text
             print(text)
