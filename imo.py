@@ -87,7 +87,7 @@ def audio_data_generator(noise_level, breath_frames, temp_wav_file, ready_flag_f
     try:
         if noise_level is None:
             noise_level = detect_noise_level(p_stream, breath_frames)
-            print("* detected noise level: %g" % noise_level, file=sys.stderr)
+            print("* detected noise level: %g" % noise_level, file=sys.stderr, flush=True)
 
         # flag indicating 'get ready'
         with open(ready_flag_file, 'w') as outp:
@@ -99,6 +99,7 @@ def audio_data_generator(noise_level, breath_frames, temp_wav_file, ready_flag_f
                 time.sleep(0.1)
 
             # wait speech
+            print("* waiting speech", file=sys.stderr, flush=True)
             raw_data, vol = read_pyaudio_stream(p_stream)
             while vol < noise_level:
                 raw_data, vol = read_pyaudio_stream(p_stream)
@@ -118,7 +119,7 @@ def audio_data_generator(noise_level, breath_frames, temp_wav_file, ready_flag_f
             sample_width = p_stream[0].get_sample_size(FORMAT)
             save_wav(temp_wav_file + '.a', b''.join(frames), sample_width)
             os.rename(temp_wav_file + '.a', temp_wav_file)
-            print("* save audio data to a temporary file", file=sys.stderr)
+            print("* save audio data to a temporary file", file=sys.stderr, flush=True)
     finally:
         close_pyaudio_stream(p_stream)
 
@@ -161,23 +162,23 @@ def main():
     else:
         adg_p = subprocess.Popen(cmd, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
-    print("* loading model ...", file=sys.stderr)
+    print("* loading model ... (may take minutes on the first run)", file=sys.stderr, flush=True)
     model = whisper.load_model(args.model)
 
     try:
         # wait until agp process gets ready
         if args.noise_level is None:
-            print("* detecting noise level ...", file=sys.stderr)
+            print("* detecting noise level ...", file=sys.stderr, flush=True)
         while not os.path.exists(ready_flag_file):
             time.sleep(0.1)
-        print("* press Ctrl+C to quit", file=sys.stderr)
+        print("* press Ctrl+C to quit", file=sys.stderr, flush=True)
 
         while True:
             # wait until audio data gets ready
             while not os.path.exists(temp_wav_file):
                 time.sleep(0.1)
             if args.diag:
-                print("* load audio data from a temporary file", file=sys.stderr)
+                print("* load audio data from a temporary file", file=sys.stderr, flush=True)
 
             # read audio data and delete it
             audio = whisper.load_audio(temp_wav_file)
@@ -197,7 +198,8 @@ def main():
 
 if __name__ == '__main__':
     if len(sys.argv) >= 2 and sys.argv[1] == AUDIO_DATA_GENERATOR_SUBPROCESS_MARK:
-        noise_level, breath_frames, temp_wav_file, ready_flag_file = sys.argv[2:]
+        cmd = sys.argv[2:]
+        noise_level, breath_frames, temp_wav_file, ready_flag_file = cmd
         noise_level = None if noise_level == "" else float(noise_level)
         breath_frames = int(breath_frames)
         audio_data_generator(noise_level, breath_frames, temp_wav_file, ready_flag_file)
