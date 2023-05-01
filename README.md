@@ -55,3 +55,10 @@ The default behavior is to estimate the language from speech and transcribe it i
 ### A Screenshot.
 
 ![](images/run1.png)
+
+### Troubleshoot
+
+* If it cannot be run with an error, check that Whisper, PyAudio and numpy are installed.
+* The first time it is launched, it downloads the model and may take a few minutes to load.
+* If no text is output, check that the microphone is recognized (and audio level is adjusted) in OS settings.
+* If recognition accuracy is not good, specify the language with the `--language` option.
